@@ -63,6 +63,21 @@ import CoreVideo
         }
     }
 
+    /// A decoded frame that already is a CVPixelBuffer (VideoToolbox NV12 or BGRA): shown as it is, no copy.
+    /// Flutter's macOS external texture takes 32BGRA and 420YpCbCr8BiPlanar (video and full range) buffers.
+    @objc public func markPixelBufferAvaliable(_ buffer: CVPixelBuffer) -> Bool {
+        queue.sync {
+            self.data = buffer
+            self.width = CVPixelBufferGetWidth(buffer)
+            self.height = CVPixelBufferGetHeight(buffer)
+            if textureId != -1 {
+                registry?.textureFrameAvailable(textureId)
+                return true
+            }
+            return false
+        }
+    }
+
     @objc public func markFrameAvaliableRaw(buffer: UnsafePointer<UInt8>, len: Int, width: Int, height: Int, stride_align: Int) -> Bool {
         queue.sync {
             _markFrameAvaliable(buffer: buffer, len: len, width: width, height: height, stride_align: stride_align)
